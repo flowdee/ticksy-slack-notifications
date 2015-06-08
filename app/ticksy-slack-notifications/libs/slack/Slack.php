@@ -3,26 +3,37 @@ require 'SlackAttachment.php';
 
 class Slack {
 
+    private $webhook_url;
     private $username;
     private $icon_url;
 
     private $messages;
 
     # Constructor
-    public function Slack() {
+    public function Slack($webhook_url) {
+
+        if ( empty($webhook_url) ) {
+            return false;
+        }
 
         $default = array(
+            'webhook_url' => $webhook_url,
             'username' => 'Ticksy',
             'icon_url' => 'https://ticksy.com/app/_theme/Ticksy_3.0/shared_assets/favicons/favicon-96x96.png',
         );
 
         // Initialize
+        $this->webhook_url = $default['webhook_url'];
         $this->username = $default['username'];
         $this->icon_url = $default['icon_url'];
     }
 
     // Push to slack
     public function push_to_slack($messages) {
+
+        if ( !$this->webhook_url ) {
+            return false;
+        }
 
         $this->messages = $messages;
 
@@ -38,6 +49,7 @@ class Slack {
         foreach ($messages as $i => $message) {
             $attachment = new SlackAttachment();
             $attachment->fallback = $message['title'] . ' - ' . $message['text'];
+            $attachment->pretext = $message['pretext'];
             $attachment->title = $message['title'];
             $attachment->text = $message['text'];
 
@@ -48,14 +60,14 @@ class Slack {
 
         $data = $payload;
 
-        $this->debug($data);
+        //$this->debug($data);
 
         // A very simple PHP example that sends a HTTP POST to a remote site
         // https://api.slack.com/incoming-webhooks
 
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL,"https://hooks.slack.com/services/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");
+        curl_setopt($ch, CURLOPT_URL,$this->webhook_url);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
@@ -63,16 +75,14 @@ class Slack {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $server_output = curl_exec ($ch);
-        print_r($server_output);
-        echo '<br>';
+        //print_r($server_output);
+        //echo '<br>';
 
         curl_close ($ch);
 
         // further processing ....
-        if ($server_output == "ok") {
-            echo 'curl done<br>';
-        } else {
-            echo 'curl problem<br>';
+        if ($server_output != "ok") {
+            echo 'Curl problem.<br>';
         }
     }
     

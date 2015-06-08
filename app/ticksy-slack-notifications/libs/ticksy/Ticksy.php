@@ -5,10 +5,6 @@ class Ticksy {
     // API settings
     private $api_url = 'https://api.ticksy.com/v1';
 
-    // Wrapper Setup
-    protected $cache_dir = 'cache';
-    public $cache_expires = 5;
-
     // User credentials
     private $domain;
     private $api_key;
@@ -130,26 +126,13 @@ class Ticksy {
     */
     protected function fetch($url, $set = null)
     {
-        // Use the API url to generate the cache file name.
-        // So: http://marketplace.envato.com/api/edge/collection:739793.json
-        // Becomes: collection-739793.json
-        $cache_path = $this->cache_dir . '/' . str_replace(':', '-', substr(strrchr($url, '/'), 1));
+        $data = $this->curl($url);
 
-        if ( $this->has_expired($cache_path) ) {
-            // get fresh copy
-            $data = $this->curl($url);
+        if ($data) {
+            $data = isset($set) ? $data->{$set} : $data; // if a set is needed, update
+        } else exit('Could not retrieve data.');
 
-            if ($data) {
-                $data = isset($set) ? $data->{$set} : $data; // if a set is needed, update
-            } else exit('Could not retrieve data.');
-
-            $this->cache_it($cache_path, $data);
-
-            return $data;
-        } else {
-            // if available in cache, use that
-            return json_decode(file_get_contents($cache_path));
-        }
+        return $data;
     }
 
     /**
@@ -172,44 +155,5 @@ class Ticksy {
         $data = json_decode($data);
 
         return $data; // string or null
-    }
-
-    /*
-    * Caches the results request to keep from hammering the API
-    *
-    * @param string $cache_path - A path to the cache file
-    * @param string $data - The results from the API call - should be encoded
-    */
-    protected function cache_it($cache_path, $data)
-    {
-        if ( !isset($data) ) return;
-        !file_exists($this->cache_dir) && mkdir($this->cache_dir);
-        file_put_contents( $cache_path, json_encode($data) );
-
-        return $cache_path;
-    }
-
-    /*
-    * Determines whether the provided file has expired yet
-    *
-    * @param string $cache_path The path to the cached file
-    * @param string $expires - In minutes, how long the file should cache for.
-    */
-    protected function has_expired($cache_path, $expires = null)
-    {
-        if ( !isset($expires) ) $expires = $this->cache_expires;
-
-        if ( file_exists($cache_path) ) {
-            return time() - $expires * 60 > filemtime($cache_path);
-        }
-
-        return true;
-    }
-
-    /*
-    * Helper function that deletes all of the files in your cache directory.
-    */
-    public function clear_cache(){
-        array_map('unlink', glob("$this->cache_dir/*"));
     }
 }

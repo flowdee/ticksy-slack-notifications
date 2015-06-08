@@ -1,4 +1,5 @@
 <?php
-define('TICKSY_DOMAIN', 'development');
-define('TICKSY_API_KEY', '64ff5fe258e4e3835f4ab55c237da01b');
+define('TICKSY_DOMAIN', 'PLEASE_INPUT_HERE');
+define('TICKSY_API_KEY', 'PLEASE_INPUT_HERE');
 define('TICKSY_ASSIGNED_ONLY', false);
+define('SLACK_WEBHOOK_URL', 'PLEASE_INPUT_HERE');
