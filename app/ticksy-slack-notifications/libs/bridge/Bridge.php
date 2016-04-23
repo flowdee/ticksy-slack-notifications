@@ -99,7 +99,7 @@ class Bridge
             }
 
             // Get latest comment
-            $comments = $this->get_comments($ticket['ticket_id']);
+            $comments = $ticket['ticket_comments'];
             $comments = $this->filter_comments($comments);
 
             // Don't push old comments on first run
